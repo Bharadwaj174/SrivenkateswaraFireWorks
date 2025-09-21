@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCrackerStore } from './store/useCrackerStore';
@@ -86,7 +87,7 @@ const App: React.FC = () => {
           <AlertTriangle className="w-20 h-20 text-yellow-500 mb-6" />
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-200 mb-2">No Inventory Data</h2>
           <p className="text-slate-400 max-w-md">
-            Could not load inventory. Please ensure `CORNATION.xlsx` is available in the project.
+            Could not load inventory. Please ensure `CORNATION.xlsx` is available in the `assets` folder.
           </p>
         </motion.div>
       );
@@ -143,7 +144,7 @@ const App: React.FC = () => {
               <div className="absolute bottom-full mb-2 w-72 right-0 transform translate-x-1/4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 scale-95 group-hover:scale-100 origin-bottom-right pointer-events-none">
                   <div className="bg-slate-700 text-slate-200 text-sm rounded-lg p-3 shadow-lg border border-slate-600">
                     <p className="font-semibold">How Data is Saved:</p>
-                    <p className="mt-1">Your edits are saved automatically in this browser. To update the main file for all users, click <strong className="text-purple-400">Download</strong> and replace the `CORNATION.xlsx` file in the project folder with the new one.</p>
+                    <p className="mt-1">Your edits are saved automatically in this browser. To update the main file for all users, click <strong className="text-purple-400">Download</strong> and replace the `CORNATION.xlsx` file in the project's `assets` folder with the new one.</p>
                   </div>
               </div>
             </div>
