@@ -8,7 +8,7 @@ import ItemList from './components/ItemList';
 import SearchBar from './components/SearchBar';
 import EditPriceModal from './components/EditPriceModal';
 import AddItemModal from './components/AddItemModal';
-import { Loader, PlusCircle, Download, AlertTriangle, Info } from 'lucide-react';
+import { Loader, PlusCircle, Download, AlertTriangle, Info, UploadCloud } from 'lucide-react';
 
 // Make XLSX globally available for TypeScript to recognize it from the CDN script
 declare var XLSX: any;
@@ -17,8 +17,9 @@ const App: React.FC = () => {
   const [introComplete, setIntroComplete] = useState(false);
   const { 
     fetchItems, selectedBrand, editingItem, loading, searchQuery, 
-    isAddingItem, setAddingItem, items, error 
+    isAddingItem, setAddingItem, items, error, loadItemsFromUpload
   } = useCrackerStore();
+  const [isParsingUpload, setIsParsingUpload] = useState(false);
   
   useEffect(() => {
     fetchItems();
@@ -54,11 +55,42 @@ const App: React.FC = () => {
     XLSX.writeFile(workbook, "CORNATION_updated.xlsx");
   };
 
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsParsingUpload(true);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = e.target?.result;
+        if (data instanceof ArrayBuffer) {
+          await loadItemsFromUpload(data);
+        } else {
+          throw new Error('Failed to read file as ArrayBuffer.');
+        }
+      } catch (err) {
+        console.error("File processing failed:", err);
+      } finally {
+        setIsParsingUpload(false);
+      }
+    };
+    reader.onerror = () => {
+        setIsParsingUpload(false);
+        console.error("FileReader error occurred.");
+    };
+    reader.readAsArrayBuffer(file);
+    
+    event.target.value = '';
+  };
+
+
   const renderContent = () => {
-    if (loading) {
+    if (loading || isParsingUpload) {
       return (
-        <div className="flex justify-center items-center h-[60vh]">
+        <div className="flex justify-center items-center h-[60vh] flex-col">
           <Loader className="w-12 h-12 animate-spin text-cyan-400" />
+          {isParsingUpload && <p className="mt-4 text-slate-300">Parsing your file...</p>}
         </div>
       );
     }
@@ -85,10 +117,24 @@ const App: React.FC = () => {
           className="flex flex-col items-center justify-center h-[60vh] text-center p-4"
         >
           <AlertTriangle className="w-20 h-20 text-yellow-500 mb-6" />
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-200 mb-2">No Inventory Data</h2>
-          <p className="text-slate-400 max-w-md">
-            Could not load inventory. Please ensure `CORNATION.xlsx` is available in the `assets` folder.
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-200 mb-2">Inventory Not Found</h2>
+          <p className="text-slate-400 max-w-md mb-8">
+            The app could not automatically load `CORNATION.xlsx` from the `assets` folder. Please upload it manually to begin.
           </p>
+          <label
+            htmlFor="file-upload"
+            className="cursor-pointer flex items-center gap-3 px-6 py-3 rounded-full bg-cyan-600 text-white hover:bg-cyan-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
+          >
+            <UploadCloud className="w-6 h-6" />
+            <span className="text-lg font-semibold">Upload Inventory File</span>
+          </label>
+          <input
+            id="file-upload"
+            type="file"
+            className="hidden"
+            accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+            onChange={handleFileChange}
+          />
         </motion.div>
       );
     }
