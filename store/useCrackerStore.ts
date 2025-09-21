@@ -1,6 +1,7 @@
+
 import { create } from 'zustand';
 import type { CrackerItem, Brand } from '../types';
-import { getItems, updateItem as apiUpdateItem, addItem as apiAddItem, fetchInitialItemsFromFile } from '../services/crackerService';
+import { getItems, updateItem as apiUpdateItem, addItem as apiAddItem, fetchInitialItemsFromFile, parseItemsFromExcel } from '../services/crackerService';
 import { produce } from 'immer';
 
 interface CrackerState {
@@ -15,6 +16,7 @@ interface CrackerState {
   isAddingItem: boolean;
 
   fetchItems: () => Promise<void>;
+  loadItemsFromUpload: (fileBuffer: ArrayBuffer) => Promise<void>;
   setSelectedBrand: (brand: string | null) => void;
   setSearchQuery: (query: string) => void;
   setEditingItem: (item: CrackerItem | null) => void;
@@ -74,6 +76,31 @@ export const useCrackerStore = create<CrackerState>((set, get) => ({
       const errorMessage = e instanceof Error ? e.message : 'Failed to fetch inventory.';
       console.error(errorMessage, e);
       set({ error: errorMessage, loading: false });
+    }
+  },
+
+  loadItemsFromUpload: async (fileBuffer: ArrayBuffer) => {
+    set({ loading: true, error: null });
+    try {
+      const items = parseItemsFromExcel(fileBuffer);
+      if (items.length > 0) {
+        localStorage.setItem('sv_fireworks_inventory', JSON.stringify(items));
+      }
+
+      const uniqueBrands: Brand[] = Array.from(new Map(items.map(item => [item.brand, { name: item.brand, icon: item.brand_icon }])).values());
+
+      set(produce(state => {
+        state.items = items;
+        state.brands = uniqueBrands;
+        state.loading = false;
+        state.filteredItems = items;
+        state.error = null;
+      }));
+
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to parse uploaded file.';
+      console.error(errorMessage, e);
+      set({ error: errorMessage, loading: false, items: [] });
     }
   },
 
