@@ -1,3 +1,4 @@
+
 import type { CrackerItem } from '../types';
 
 // Make XLSX globally available for TypeScript to recognize it from the CDN script
@@ -123,7 +124,7 @@ export const parseItemsFromExcel = (data: ArrayBuffer): CrackerItem[] => {
 };
 
 export const fetchInitialItemsFromFile = async (): Promise<CrackerItem[]> => {
-    const filePath = '/core/CORNATION.xlsx';
+    const filePath = '/assets/CORNATION.xlsx';
     console.log(`Attempting to fetch initial data from ${filePath}`);
     try {
         const response = await fetch(filePath);
